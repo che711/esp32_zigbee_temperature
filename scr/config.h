@@ -5,8 +5,8 @@
 // ============================================================
 
 // ── WiFi ────────────────────────────────────────────────────
-#define WIFI_SSID     "YOUR_SSID"
-#define WIFI_PASSWORD "YOUR_PASSWORD"
+#define WIFI_SSID     "SkyNet"
+#define WIFI_PASSWORD "password"
 
 // Hostname (mDNS: http://weather-station.local)
 #define DEVICE_HOSTNAME "weather-station"
