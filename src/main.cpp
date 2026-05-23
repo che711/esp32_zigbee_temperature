@@ -22,7 +22,7 @@ static unsigned long lastSensorRead = 0;
 
 static void ledColor(uint8_t r, uint8_t g, uint8_t b) {
     // Используем простой digitalWrite-паттерн через neopixelWrite (arduino-esp32 ≥ 3.x)
-    neopixelWrite(LED_PIN, g, r, b);  // WS2812: порядок G-R-B
+    rgbLedWrite(LED_PIN, r, g, b); // порядок: R,G,B
 }
 
 // ── WiFi ──────────────────────────────────────────────────────

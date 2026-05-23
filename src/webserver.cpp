@@ -109,7 +109,7 @@ static void handleRoot() {
 }
 
 static void handleApiData() {
-    StaticJsonDocument<256> doc;
+    JsonDocument doc;
 
     if (_data && _data->valid) {
         doc["valid"]       = true;
