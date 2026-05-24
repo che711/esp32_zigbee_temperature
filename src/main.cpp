@@ -7,6 +7,7 @@
 #include "sensor.h"
 #include "webserver.h"
 #include "mqtt.h"
+#include "sysinfo.h"
 
 // ============================================================
 //  main.cpp  —  точка входа, WiFi, OTA, главный цикл
@@ -18,11 +19,10 @@ static unsigned long lastSensorRead = 0;
 
 // ── Статус LED (WS2812 на GPIO8) ──────────────────────────────
 // Минимальная реализация без библиотеки (один пиксель, RMT)
-#include <driver/rmt_tx.h>
 
 static void ledColor(uint8_t r, uint8_t g, uint8_t b) {
     // Используем простой digitalWrite-паттерн через neopixelWrite (arduino-esp32 ≥ 3.x)
-    rgbLedWrite(LED_PIN, r, g, b); // порядок: R,G,B
+    rgbLedWrite(LED_PIN, r, g, b);  // WS2812: порядок G-R-B
 }
 
 // ── WiFi ──────────────────────────────────────────────────────
@@ -95,8 +95,27 @@ static void printData(const SensorData& d) {
         Serial.println("[Sensor] Нет данных.");
         return;
     }
-    Serial.printf("[Sensor] T: %.2f°C | P: %.2f гПа | Alt: %.1f м | Uptime: %lus\n",
-                  d.temperature, d.pressure, d.altitude, millis() / 1000UL);
+
+    // Метеоданные
+    Serial.println("─────────────────────────────────────────");
+    Serial.printf("[Погода]  T: %.2f°C  |  P: %.2f гПа (%.1f мм.рт.ст.)\n",
+                  d.temperature, d.pressure, d.pressureMmHg);
+    Serial.printf("[Погода]  Alt: %.1f м  |  QNH: %.2f гПа  |  ρ: %.4f кг/м³\n",
+                  d.altitude, d.pressureQnh, d.airDensity);
+
+    char trendSign = d.pressureTrend >= 0 ? '+' : ' ';
+    Serial.printf("[Погода]  Тренд: %c%.3f гПа/ч  |  Прогноз: %s %s\n",
+                  trendSign, d.pressureTrend,
+                  forecastEmoji(d.forecastIcon), forecastText(d.forecastIcon));
+
+    // Системная информация
+    SysInfo sys = sysInfoRead();
+    Serial.printf("[Система] Чип: %.1f°C  |  CPU: %u МГц  |  Heap: %u кБ свободно (%u%%)\n",
+                  sys.chipTempC, sys.cpuFreqMHz,
+                  sys.freeHeap / 1024, sys.heapUsedPct);
+    Serial.printf("[Сеть]    %s  |  IP: %s  |  RSSI: %d dBm (%u%%) %s\n",
+                  sys.ssid.c_str(), sys.ip.c_str(),
+                  sys.rssi, sys.rssiPct, rssiQuality(sys.rssi));
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -117,11 +136,14 @@ void setup() {
         }
     }
 
+    // OLED (инициализировать ПОСЛЕ sensorInit — Wire уже поднят)
+
     // Первое чтение сразу
     latestData = sensorRead();
     printData(latestData);
 
     wifiConnect();
+    sysInfoInit();
     mdnsInit();
     otaInit();
 
@@ -159,6 +181,8 @@ void loop() {
             ledColor(3, 0, 0);
         }
     }
+
+    // OLED — обновляем в каждой итерации (внутри есть таймер страниц)
 
     // MQTT
 #if MQTT_ENABLED

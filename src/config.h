@@ -12,7 +12,7 @@
 #define DEVICE_HOSTNAME "weather-station"
 
 // ── MQTT ────────────────────────────────────────────────────
-#define MQTT_ENABLED   true           // false — отключить MQTT полностью
+#define MQTT_ENABLED   false           // false — отключить MQTT полностью
 #define MQTT_SERVER    "192.168.1.10" // IP брокера (Home Assistant / Mosquitto)
 #define MQTT_PORT      1883
 #define MQTT_USER      ""             // пусто, если без авторизации
@@ -26,10 +26,14 @@
 #define MQTT_TOPIC_ALTITUDE "weather/station/altitude"
 #define MQTT_TOPIC_STATUS   "weather/station/status"   // online / offline
 
+// Тот же I²C bus, что и BMP280 — просто другой адрес
+// Адрес: автоопределение (0x3C или 0x3D)
+//        0x3D (если перемычка SA0 замкнута)
+
 // ── BMP280 ──────────────────────────────────────────────────
 // I²C на ESP32-C6-Zero: SDA=GPIO6, SCL=GPIO7
-#define BMP280_SDA_PIN  6
-#define BMP280_SCL_PIN  7
+#define BMP280_SDA_PIN  4
+#define BMP280_SCL_PIN  5
 // Адрес: 0x76 (SDO → GND, типично для модулей)
 //        0x77 (SDO → VCC или не подключён)
 #define BMP280_I2C_ADDR 0x76
